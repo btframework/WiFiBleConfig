@@ -1,0 +1,8 @@
+{
+    "configuration": "JTAGAdapter=bridge,CDCOnBoot=default,PartitionScheme=huge_app,CPUFreq=160,FlashMode=qio,FlashFreq=80,FlashSize=4M,UploadSpeed=921600,DebugLevel=none,EraseFlash=none",
+    "board": "esp32:esp32:esp32c3",
+    "programmer": "esptool",
+    "port": "COM4",
+    "sketch": "WiFiBle.ino",
+    "output": "./build"
+}

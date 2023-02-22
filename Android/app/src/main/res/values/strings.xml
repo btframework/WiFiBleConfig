@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">WiFiBleConfig</string>
+
+    <string name="start_scan">Start Scan</string>
+    <string name="stop_scan">Stop Scanning</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="def_ssid">WiFiBle</string>
+    <string name="def_pwd">123456789</string>
+
+    <string name="stopped">Stopped</string>
+    <string name="started">Scanning</string>
+    <string name="no_permissions">No permissions</string>
+    <string name="device_found">Device found %s</string>
+    <string name="connected">Connected</string>
+
+    <string name="ssid">SSID</string>
+    <string name="password">Password</string>
+
+    <string name="start_wifi">Start WiFi</string>
+    <string name="stop_wifi">Stop WiFi</string>
+
+    <string name="wifi_status_unknown">Unknown</string>
+    <string name="wifi_status_started">Started. Connected clients: %d</string>
+    <string name="wifi_status_stopped">Stopped</string>
+    <string name="wifi_status_not_configured">Not configured</string>
+    <string name="wifi_status_error">Error</string>
+</resources>

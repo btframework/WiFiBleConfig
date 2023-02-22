@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="16dp"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="16dp"
+    tools:context=".MainActivity">
+
+    <Button
+        android:id="@+id/StartStopScanButton"
+        android:layout_width="180dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="40dp"
+        android:text="@string/start_scan"/>
+
+    <TextView
+        android:id="@+id/StateLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_below="@id/StartStopScanButton"
+        android:layout_marginTop="20dp"
+        android:text="@string/stopped"/>
+
+    <TextView
+        android:id="@+id/SsidLabel"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/StateLabel"
+        android:layout_marginTop="40dp"
+        android:text="@string/ssid" />
+
+    <TextView
+        android:id="@+id/PasswordLabel"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/SsidLabel"
+        android:layout_marginTop="40dp"
+        android:text="@string/password" />
+
+    <EditText
+        android:id="@+id/EditSsdi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="12"
+        android:inputType="textPersonName"
+        android:layout_toRightOf="@id/SsidLabel"
+        android:layout_alignBaseline="@id/SsidLabel"
+        android:text="@string/def_ssid" />
+
+    <EditText
+        android:id="@+id/EditPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="12"
+        android:inputType="numberPassword"
+        android:layout_toRightOf="@id/PasswordLabel"
+        android:layout_alignBaseline="@id/PasswordLabel"
+        android:text="@string/def_pwd" />
+
+    <Button
+        android:id="@+id/StartWiFiButton"
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:layout_below="@id/EditPassword"
+        android:text="@string/start_wifi"/>
+
+    <Button
+        android:id="@+id/StopWiFiButton"
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_below="@id/EditPassword"
+        android:layout_toRightOf="@id/StartWiFiButton"
+        android:text="@string/stop_wifi"/>
+
+    <TextView
+        android:id="@+id/WiFiStatusLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/StartWiFiButton"
+        android:layout_marginTop="20dp"
+        android:text="@string/wifi_status_unknown" />
+
+</RelativeLayout>
