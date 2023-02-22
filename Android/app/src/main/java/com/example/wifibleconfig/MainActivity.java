@@ -121,9 +121,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestLocationPermission() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Location permission required");
-        builder.setMessage("Starting from Android M (6.0), the system requires apps to be granted " +
-                "location access in order to scan for BLE devices.");
+        builder.setTitle(getResources().getString(R.string.location_dlg_title));
+        builder.setMessage(getResources().getString(R.string.location_dlg_text));
         builder.setPositiveButton(android.R.string.ok, null);
         builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
@@ -138,9 +137,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestBluetoothPermissions() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Bluetooth permission required");
-        builder.setMessage("Starting from Android 12, the system requires apps to be granted " +
-                "Bluetooth access in order to scan for and connect to BLE devices.");
+        builder.setTitle(getResources().getString(R.string.bluetooth_dlg_title));
+        builder.setMessage(getResources().getString(R.string.bluetooth_dlg_text));
         builder.setPositiveButton(android.R.string.ok, null);
         builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
@@ -155,6 +153,14 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
     //endregion
+
+    private void showErrorMessage(String message) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getResources().getString(R.string.error_dlg_title));
+        builder.setMessage(message);
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.show();
+    }
 
     //region Callbacks
     private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
@@ -439,6 +445,26 @@ public class MainActivity extends AppCompatActivity {
     private void startWiFiButtonClicked() {
         if (wifiCharacteristic != null) {
             String ssid = ssidEdit.getText().toString();
+            String password = passwordEdit.getText().toString();
+
+            if (ssid.length() == 0) {
+                showErrorMessage(getResources().getString(R.string.error_dlg_ssid_empty));
+                return;
+            }
+            if (ssid.length() > 16) {
+                showErrorMessage(getResources().getString(R.string.error_dlg_ssid_long));
+                return;
+            }
+
+            if (password.length() == 0) {
+                showErrorMessage(getResources().getString(R.string.error_dlg_password_empty));
+                return;
+            }
+            if (password.length() > 16) {
+                showErrorMessage(getResources().getString(R.string.error_dlg_password_long));
+                return;
+            }
+
             byte[] value = new byte[ssid.length() + 1];
             byte[] str = ssid.getBytes(StandardCharsets.US_ASCII);
             value[0] = WIFI_CMD_SET_SSID;
