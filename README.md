@@ -6,7 +6,7 @@ This project was developed as solution for this Freelancer job: https://www.free
 
 This was created **just for fun** but may be usefull for someone.
 
-**Test board**: ESP32C3
-**Test Android device**: HUAWAI P smart (Android 10)
-**IDE**: Visual Studio Code + Arduio plugin + Arduino ESP-IDF 2.0.7
+**Test board**: ESP32C3  
+**Test Android device**: HUAWAI P smart (Android 10)  
+**IDE**: Visual Studio Code + Arduio plugin + Arduino ESP-IDF 2.0.7  
 Android Studio 2022.1.1 Patch 1
