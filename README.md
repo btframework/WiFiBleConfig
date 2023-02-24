@@ -10,3 +10,5 @@ This was created **just for fun** but may be usefull for someone.
 **Test Android device**: HUAWAI P smart (Android 10)  
 **IDE**: Visual Studio Code + Arduio plugin + Arduino ESP-IDF 2.0.7  
 Android Studio 2022.1.1 Patch 1
+
+**Please, do not forget to visit [Wireless Communication Library](https://www.btframework.com) site**
