@@ -43,27 +43,12 @@ import java.util.List;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
+
     //region Constants
     private final static String TAG = "BLE_WIFI";
 
     private final static int ENABLE_BLUETOOTH_REQUEST_CODE = 1;
     private final static int RUNTIME_PERMISSION_REQUEST_CODE = 2;
-
-    private final static String SERVICE_UUID = "4fafc201-1fb5-459e-8fcc-c5c9c331914b";
-    private final static String CHARACTERISTIC_UUID = "beb5483e-36e1-4688-b7f5-ea07361b26a8";
-    private final static String CCC_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805f9b34fb";
-
-    private final static byte WIFI_STATUS_STARTED = 0x01;
-    private final static byte WIFI_STATUS_STOPPED = 0x02;
-    private final static byte WIFI_STATUS_NO_CONFIG = 0x04;
-    private final static byte WIFI_STATUS_ERROR = 0x05;
-
-    private final static byte WIFI_CMD_NONE = 0x00;
-    private final static byte WIFI_CMD_SET_SSID = 0x01;
-    private final static byte WIFI_CMD_SET_PWD = 0x02;
-    private final static byte WIFI_CMD_START = 0x03;
-    private final static byte WIFI_CMD_STOP = 0x04;
-    private final static byte WIFI_CMD_GET_STATUS = 0x05;
     //endregion
 
     private Context _context;
@@ -88,137 +73,12 @@ public class MainActivity extends AppCompatActivity {
 
     private byte currentCommand;
 
-    //region Permission check methods
-    @SuppressLint("MissingPermission")
-    private void promptEnableBluetooth() {
-        if (!bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, ENABLE_BLUETOOTH_REQUEST_CODE);
-        }
-    }
-
-    private boolean hasPermission(String permissionType) {
-        return (checkSelfPermission(permissionType) == PackageManager.PERMISSION_GRANTED);
-    }
-
-    private boolean hasRequiredRuntimePermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            return (hasPermission(Manifest.permission.BLUETOOTH_SCAN) &&
-                    hasPermission(Manifest.permission.BLUETOOTH_CONNECT));
-        }
-
-        return hasPermission(Manifest.permission.ACCESS_FINE_LOCATION);
-    }
-
-    private void requestRelevantRuntimePermissions() {
-        if (!hasRequiredRuntimePermissions()) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
-                requestLocationPermission();
-            else
-                requestBluetoothPermissions();
-        }
-    }
-
-    private void requestLocationPermission() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getResources().getString(R.string.location_dlg_title));
-        builder.setMessage(getResources().getString(R.string.location_dlg_text));
-        builder.setPositiveButton(android.R.string.ok, null);
-        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                requestPermissions(
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        RUNTIME_PERMISSION_REQUEST_CODE);
-            }
-        });
-        builder.show();
-    }
-
-    private void requestBluetoothPermissions() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getResources().getString(R.string.bluetooth_dlg_title));
-        builder.setMessage(getResources().getString(R.string.bluetooth_dlg_text));
-        builder.setPositiveButton(android.R.string.ok, null);
-        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
-                String[] permissions = new String[]{
-                        Manifest.permission.BLUETOOTH_SCAN,
-                        Manifest.permission.BLUETOOTH_CONNECT
-                };
-                requestPermissions(permissions, RUNTIME_PERMISSION_REQUEST_CODE);
-            }
-        });
-        builder.show();
-    }
-    //endregion
-
-    private void showErrorMessage(String message) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getResources().getString(R.string.error_dlg_title));
-        builder.setMessage(message);
-        builder.setPositiveButton(android.R.string.ok, null);
-        builder.show();
-    }
-
-    //region Callbacks
+    //region Bluetooth callbacks
     private BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
-        private void enableWiFiButtons(boolean enabled)
-        {
-            startWiFiButton.setEnabled(enabled);
-            stopWiFiButton.setEnabled(enabled);
-        }
-        private void enableWiFiSettings(boolean enabled) {
-            currentCommand = WIFI_CMD_NONE;
-
-            ssidEdit.setEnabled(enabled);
-            passwordEdit.setEnabled(enabled);
-            enableWiFiButtons(enabled);
-
-            wifiStatusLabel.setText(R.string.wifi_status_unknown);
-            if (enabled)
-                wifiStatusLabel.setVisibility(View.VISIBLE);
-            else
-                wifiStatusLabel.setVisibility(View.INVISIBLE);
-        }
-
-        private void updateWiFiStatus(byte[] value) {
-            String status;
-            switch (value[0]) {
-                case WIFI_STATUS_STARTED:
-                    status = String.format(getResources().getString(R.string.wifi_status_started),
-                            value[1]);
-                    break;
-
-                case WIFI_STATUS_STOPPED:
-                    status = getResources().getString(R.string.wifi_status_stopped);
-                    break;
-
-                case WIFI_STATUS_NO_CONFIG:
-                    status = getResources().getString(R.string.wifi_status_not_configured);
-                    break;
-
-                case WIFI_STATUS_ERROR:
-                    status = getResources().getString(R.string.wifi_status_error);
-                    break;
-
-                default:
-                    status = getResources().getString(R.string.wifi_status_unknown);
-                    break;
-            }
-
-            MainActivity.this.runOnUiThread(new Runnable() {
-                public void run() {
-                    wifiStatusLabel.setText(status);
-                    stopWiFiButton.setEnabled(value[0] == WIFI_STATUS_STARTED);
-                }
-            });
-        }
 
         @SuppressLint("MissingPermission")
         private boolean enableNotifications() {
-            UUID cccdUuid = UUID.fromString(CCC_DESCRIPTOR_UUID);
+            UUID cccdUuid = UUID.fromString(WiFiGattServices.CCC_DESCRIPTOR_UUID);
 
             BluetoothGattDescriptor descriptor = wifiCharacteristic.getDescriptor(cccdUuid);
             if (descriptor == null)
@@ -234,6 +94,59 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        private void enableWiFiButtons(boolean enabled)
+        {
+            startWiFiButton.setEnabled(enabled);
+            stopWiFiButton.setEnabled(enabled);
+        }
+
+        private void enableWiFiSettings(boolean enabled) {
+            currentCommand = WiFiCommands.WIFI_CMD_NONE;
+
+            ssidEdit.setEnabled(enabled);
+            passwordEdit.setEnabled(enabled);
+            enableWiFiButtons(enabled);
+
+            wifiStatusLabel.setText(R.string.wifi_status_unknown);
+            if (enabled)
+                wifiStatusLabel.setVisibility(View.VISIBLE);
+            else
+                wifiStatusLabel.setVisibility(View.INVISIBLE);
+        }
+
+        private void updateWiFiStatus(byte[] value) {
+            String status;
+            switch (value[0]) {
+                case WiFiCommands.WIFI_STATUS_STARTED:
+                    status = String.format(getResources().getString(R.string.wifi_status_started),
+                            value[1]);
+                    break;
+
+                case WiFiCommands.WIFI_STATUS_STOPPED:
+                    status = getResources().getString(R.string.wifi_status_stopped);
+                    break;
+
+                case WiFiCommands.WIFI_STATUS_NO_CONFIG:
+                    status = getResources().getString(R.string.wifi_status_not_configured);
+                    break;
+
+                case WiFiCommands.WIFI_STATUS_ERROR:
+                    status = getResources().getString(R.string.wifi_status_error);
+                    break;
+
+                default:
+                    status = getResources().getString(R.string.wifi_status_unknown);
+                    break;
+            }
+
+            MainActivity.this.runOnUiThread(new Runnable() {
+                public void run() {
+                    wifiStatusLabel.setText(status);
+                    stopWiFiButton.setEnabled(value[0] == WiFiCommands.WIFI_STATUS_STARTED);
+                }
+            });
+        }
+
         @SuppressLint("MissingPermission")
         private void setCharacteristicValue(byte[] value, byte command) {
             boolean res = wifiCharacteristic.setValue(value);
@@ -244,6 +157,14 @@ public class MainActivity extends AppCompatActivity {
                 gattClient.disconnect();
             else
                 currentCommand = command;
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt,
+                                            BluetoothGattCharacteristic characteristic) {
+            byte[] value = characteristic.getValue();
+            if (value != null && value.length == 2)
+                updateWiFiStatus(value);
         }
 
         @SuppressLint("MissingPermission")
@@ -271,23 +192,23 @@ public class MainActivity extends AppCompatActivity {
             byte[] value;
             boolean res;
             switch (currentCommand) {
-                case WIFI_CMD_SET_SSID:
+                case WiFiCommands.WIFI_CMD_SET_SSID:
                     String password = passwordEdit.getText().toString();
                     value = new byte[password.length() + 1];
                     byte[] str = password.getBytes(StandardCharsets.US_ASCII);
-                    value[0] = WIFI_CMD_SET_PWD;
+                    value[0] = WiFiCommands.WIFI_CMD_SET_PWD;
                     System.arraycopy(str, 0, value, 1, str.length);
-                    setCharacteristicValue(value, WIFI_CMD_SET_PWD);
+                    setCharacteristicValue(value, WiFiCommands.WIFI_CMD_SET_PWD);
                     break;
 
-                case WIFI_CMD_SET_PWD:
-                    value = new byte[]{WIFI_CMD_START};
-                    setCharacteristicValue(value, WIFI_CMD_START);
+                case WiFiCommands.WIFI_CMD_SET_PWD:
+                    value = new byte[]{WiFiCommands.WIFI_CMD_START};
+                    setCharacteristicValue(value, WiFiCommands.WIFI_CMD_START);
                     break;
 
-                case WIFI_CMD_START:
-                case WIFI_CMD_STOP:
-                    currentCommand = WIFI_CMD_NONE;
+                case WiFiCommands.WIFI_CMD_START:
+                case WiFiCommands.WIFI_CMD_STOP:
+                    currentCommand = WiFiCommands.WIFI_CMD_NONE;
                     MainActivity.this.runOnUiThread(new Runnable() {
                         public void run() {
                             enableWiFiButtons(true);
@@ -295,33 +216,6 @@ public class MainActivity extends AppCompatActivity {
                     });
                     break;
             }
-        }
-
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-            byte[] value = characteristic.getValue();
-            if (value != null && value.length == 2)
-                updateWiFiStatus(value);
-        }
-
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            UUID serviceUuid = UUID.fromString(SERVICE_UUID);
-            UUID characteristicUuid = UUID.fromString(CHARACTERISTIC_UUID);
-
-            BluetoothGattService service = gatt.getService(serviceUuid);
-            if (service != null) {
-                wifiCharacteristic = service.getCharacteristic(characteristicUuid);
-                if (wifiCharacteristic != null) {
-                    if (!gattClient.readCharacteristic(wifiCharacteristic))
-                        wifiCharacteristic = null;
-                }
-            }
-
-            if (wifiCharacteristic == null)
-                gattClient.disconnect();
         }
 
         @SuppressLint("MissingPermission")
@@ -360,6 +254,25 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
+
+        @SuppressLint("MissingPermission")
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            UUID serviceUuid = UUID.fromString(WiFiGattServices.SERVICE_UUID);
+            UUID characteristicUuid = UUID.fromString(WiFiGattServices.CHARACTERISTIC_UUID);
+
+            BluetoothGattService service = gatt.getService(serviceUuid);
+            if (service != null) {
+                wifiCharacteristic = service.getCharacteristic(characteristicUuid);
+                if (wifiCharacteristic != null) {
+                    if (!gattClient.readCharacteristic(wifiCharacteristic))
+                        wifiCharacteristic = null;
+                }
+            }
+
+            if (wifiCharacteristic == null)
+                gattClient.disconnect();
+        }
     };
 
     private ScanCallback scanCallback = new ScanCallback() {
@@ -378,6 +291,68 @@ public class MainActivity extends AppCompatActivity {
         }
     };
     //endregion
+
+    //region Permission check methods
+    private boolean hasPermission(String permissionType) {
+        return (checkSelfPermission(permissionType) == PackageManager.PERMISSION_GRANTED);
+    }
+
+    private boolean hasRequiredRuntimePermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            return (hasPermission(Manifest.permission.BLUETOOTH_SCAN) &&
+                    hasPermission(Manifest.permission.BLUETOOTH_CONNECT));
+        }
+
+        return hasPermission(Manifest.permission.ACCESS_FINE_LOCATION);
+    }
+
+    @SuppressLint("MissingPermission")
+    private void promptEnableBluetooth() {
+        if (!bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, ENABLE_BLUETOOTH_REQUEST_CODE);
+        }
+    }
+
+    private void requestBluetoothPermissions() {
+        showRequestPermissionDialog(R.string.bluetooth_dlg_title, R.string.bluetooth_dlg_text,
+                new String[]{
+                        Manifest.permission.BLUETOOTH_SCAN,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                });
+    }
+
+    private void requestLocationPermission() {
+        showRequestPermissionDialog(R.string.location_dlg_title, R.string.location_dlg_text,
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION});
+    }
+
+    private void requestRelevantRuntimePermissions() {
+        if (!hasRequiredRuntimePermissions()) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S)
+                requestLocationPermission();
+            else
+                requestBluetoothPermissions();
+        }
+    }
+
+    private void showRequestPermissionDialog(int titleId, int textId, String[] permissions) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getResources().getString(titleId));
+        builder.setMessage(getResources().getString(textId));
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.setOnDismissListener(dialog -> requestPermissions(permissions, RUNTIME_PERMISSION_REQUEST_CODE));
+        builder.show();
+    }
+    //endregion
+
+    private void showErrorMessage(String message) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getResources().getString(R.string.error_dlg_title));
+        builder.setMessage(message);
+        builder.setPositiveButton(android.R.string.ok, null);
+        builder.show();
+    }
 
     //region Bluetooth LE scanning control
     @SuppressLint("MissingPermission")
@@ -401,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
                     //.setReportDelay(0L)
                     .build();
             ScanFilter filter = new ScanFilter.Builder()
-                    .setServiceUuid(ParcelUuid.fromString(SERVICE_UUID))
+                    .setServiceUuid(ParcelUuid.fromString(WiFiGattServices.SERVICE_UUID))
                     .build();
             bluetoothLeScanner.startScan(Collections.singletonList(filter), scanSettings,
                     scanCallback);
@@ -467,7 +442,7 @@ public class MainActivity extends AppCompatActivity {
 
             byte[] value = new byte[ssid.length() + 1];
             byte[] str = ssid.getBytes(StandardCharsets.US_ASCII);
-            value[0] = WIFI_CMD_SET_SSID;
+            value[0] = WiFiCommands.WIFI_CMD_SET_SSID;
             System.arraycopy(str, 0, value, 1, str.length);
 
             boolean res = wifiCharacteristic.setValue(value);
@@ -480,7 +455,7 @@ public class MainActivity extends AppCompatActivity {
                 startWiFiButton.setEnabled(false);
                 stopWiFiButton.setEnabled(false);
 
-                currentCommand = WIFI_CMD_SET_SSID;
+                currentCommand = WiFiCommands.WIFI_CMD_SET_SSID;
             }
         }
     }
@@ -488,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("MissingPermission")
     private void stopWiFiButtonClicked() {
         if (wifiCharacteristic != null) {
-            byte[] value = new byte[]{WIFI_CMD_STOP};
+            byte[] value = new byte[]{WiFiCommands.WIFI_CMD_STOP};
             boolean res = wifiCharacteristic.setValue(value);
             if (res)
                 res = gattClient.writeCharacteristic(wifiCharacteristic);
@@ -499,13 +474,23 @@ public class MainActivity extends AppCompatActivity {
                 startWiFiButton.setEnabled(false);
                 stopWiFiButton.setEnabled(false);
 
-                currentCommand = WIFI_CMD_STOP;
+                currentCommand = WiFiCommands.WIFI_CMD_STOP;
             }
         }
     }
     //endregion
 
     //region Activity overloads (events)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == ENABLE_BLUETOOTH_REQUEST_CODE) {
+            if (resultCode != Activity.RESULT_OK)
+                promptEnableBluetooth();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -543,25 +528,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (!bluetoothAdapter.isEnabled()) {
-            promptEnableBluetooth();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == ENABLE_BLUETOOTH_REQUEST_CODE) {
-            if (resultCode != Activity.RESULT_OK)
-                promptEnableBluetooth();
-        }
-    }
-
-    @Override
     public void onRequestPermissionsResult(int requestCode, @NotNull String[] permissions,
                                            @NotNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -572,6 +538,15 @@ public class MainActivity extends AppCompatActivity {
                 if (containsDenial)
                     requestRelevantRuntimePermissions();
                 break;
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (!bluetoothAdapter.isEnabled()) {
+            promptEnableBluetooth();
         }
     }
     //endregion
