@@ -11,4 +11,8 @@ This was created **just for fun** but may be usefull for someone.
 **IDE**: Visual Studio Code + Arduio plugin + Arduino ESP-IDF 2.0.7  
 Android Studio 2022.1.1 Patch 1
 
+This project was developed by [me](https://www.facebook.com/marina.petrichenko.1)
+
+Should you have any question you can contact us directly at marina@btframework.com
+
 **Please, do not forget to visit [Wireless Communication Library](https://www.btframework.com) site**
