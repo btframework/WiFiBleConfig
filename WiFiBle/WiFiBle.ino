@@ -17,13 +17,22 @@ using namespace std;
 
 #define WIFI_STATUS_STARTED     0x0001
 #define WIFI_STATUS_STOPPED     0x0002
-#define WIFI_STATUS_NO_CONFIG   0x0004
-#define WIFI_STATUS_ERROR       0x0005
+#define WIFI_STATUS_NO_CONFIG   0x0003
+#define WIFI_STATUS_ERROR       0x0004
 
 /* GATT attributes */
 
 #define SERVICE_UUID        "4fafc201-1fb5-459e-8fcc-c5c9c331914b"
 #define CHARACTERISTIC_UUID "beb5483e-36e1-4688-b7f5-ea07361b26a8"
+
+/* LED Pins */
+
+#define RGB_LED_PIN_RED     3
+#define RGB_LED_PIN_GREEN   4
+#define RGB_LED_PIN_BLUE    5
+
+#define WHITE_LED_PIN_COLD  18
+#define WHITE_LED_PIN_WARM  19
 
 /* Forward declaration */
 
@@ -49,6 +58,43 @@ private:
     string              m_Password;
     string              m_Ssid;
     uint16_t            m_WiFiStatus;
+
+    /* LEDs control */
+
+    void UpdateLeds()
+    {
+        if (m_DeviceConnected)
+            digitalWrite(WHITE_LED_PIN_COLD, HIGH);
+        else
+            digitalWrite(WHITE_LED_PIN_COLD, LOW);
+
+        switch (m_WiFiStatus)
+        {
+            case WIFI_STATUS_STARTED:
+                digitalWrite(RGB_LED_PIN_RED, LOW);
+                digitalWrite(RGB_LED_PIN_GREEN, HIGH);
+                digitalWrite(RGB_LED_PIN_BLUE, LOW);
+                if (WiFi.softAPgetStationNum() > 0)
+                    digitalWrite(WHITE_LED_PIN_WARM, HIGH);
+                else
+                    digitalWrite(WHITE_LED_PIN_WARM, LOW);
+                break;
+
+            case WIFI_STATUS_STOPPED:
+                digitalWrite(RGB_LED_PIN_RED, LOW);
+                digitalWrite(RGB_LED_PIN_GREEN, LOW);
+                digitalWrite(RGB_LED_PIN_BLUE, HIGH);
+                digitalWrite(WHITE_LED_PIN_WARM, LOW);
+                break;
+
+            case WIFI_STATUS_NO_CONFIG:
+                digitalWrite(RGB_LED_PIN_RED, HIGH);
+                digitalWrite(RGB_LED_PIN_GREEN, LOW);
+                digitalWrite(RGB_LED_PIN_BLUE, LOW);
+                digitalWrite(WHITE_LED_PIN_WARM, LOW);
+                break;
+        }
+    }
 
     /* GATT initialization */
 
@@ -130,6 +176,8 @@ private:
             if (m_DeviceConnected)
                 m_pCharacteristic->notify(true);
         }
+
+        UpdateLeds();
     }
 
     /* WiFi support */
@@ -143,7 +191,7 @@ private:
             m_WiFiStatus = WIFI_STATUS_NO_CONFIG;
         else
             m_WiFiStatus = WIFI_STATUS_STOPPED;
-        
+
         Notify();
     }
 
@@ -207,6 +255,7 @@ public:
     virtual void onConnect(BLEServer* pServer) override
     {
         m_DeviceConnected = true;
+        UpdateLeds();
     }
 
     virtual void onDisconnect(BLEServer* pServer) override
@@ -214,6 +263,7 @@ public:
         m_DeviceConnected = false;
         // We need to restart advertising.
         BLEDevice::startAdvertising();
+        UpdateLeds();
     }
 
 public:
@@ -306,6 +356,20 @@ public:
 void setup()
 {
     g_pBleWiFi = new BleWiFi();
+    
+    pinMode(RGB_LED_PIN_RED, OUTPUT);
+    pinMode(RGB_LED_PIN_GREEN, OUTPUT);
+    pinMode(RGB_LED_PIN_BLUE, OUTPUT);
+
+    pinMode(WHITE_LED_PIN_COLD, OUTPUT);
+    pinMode(WHITE_LED_PIN_WARM, OUTPUT);
+    
+    digitalWrite(RGB_LED_PIN_RED, HIGH); // Not configured
+    digitalWrite(RGB_LED_PIN_GREEN, LOW); // Started
+    digitalWrite(RGB_LED_PIN_BLUE, LOW); // Configured, not started
+
+    digitalWrite(WHITE_LED_PIN_COLD, LOW); 
+    digitalWrite(WHITE_LED_PIN_WARM, LOW); // Client connected
 }
 
 void loop()
