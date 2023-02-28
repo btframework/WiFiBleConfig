@@ -27,8 +27,6 @@ import java.util.UUID;
 
 public class MainActivity extends PermissionsChecker {
 
-    private Context _context;
-
     //region Bluetooth objects
     private BluetoothLeScanner bluetoothLeScanner;
     private BluetoothGatt gattClient;
@@ -260,8 +258,8 @@ public class MainActivity extends PermissionsChecker {
             stopScanning(true);
             scanButton.setEnabled(false);
 
-            gattClient = bluetoothDevice.connectGatt(_context, false, gattCallback,
-                    BluetoothDevice.TRANSPORT_LE);
+            gattClient = bluetoothDevice.connectGatt(MainActivity.this, false,
+                    gattCallback, BluetoothDevice.TRANSPORT_LE);
         }
     };
     //endregion
